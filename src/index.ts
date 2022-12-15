@@ -57,7 +57,7 @@ interface APIResponse {
         return parseInt(b.claps, 10) - parseInt(a.claps, 10);
       })
       .slice(0, 3);
-    // console.log(slicedData);
+    console.log(slicedData);
   } catch (err) {
     throw new Error('Get data failed');
   }
