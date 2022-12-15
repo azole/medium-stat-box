@@ -1,3 +1,5 @@
+## fix for medium new format by Ashley
+
 <p align="center">
    <img src="https://i.imgur.com/lTFt1CF.png" alt="screenshot" width="500">
   <h3 align="center">📌 Medium Stat Box</h3>

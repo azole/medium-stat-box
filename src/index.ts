@@ -57,7 +57,7 @@ interface APIResponse {
         return parseInt(b.claps, 10) - parseInt(a.claps, 10);
       })
       .slice(0, 3);
-    console.log(slicedData);
+    // console.log(slicedData);
   } catch (err) {
     throw new Error('Get data failed');
   }
@@ -65,9 +65,8 @@ interface APIResponse {
   // Get user's follower count
   const res = await axios.get(MEDIUM_PROFILE_BASE_URL + MEDIUM_USER_NAME);
   const $ = cheerio.load(res.data);
-  const followerCountMatchList = $('button')
-    .text()
-    .match(FOLLOWERS_COUNT_REGEX);
+  const followerCountMatchList = $('a').text().match(FOLLOWERS_COUNT_REGEX);
+  // console.log($('a').text().match(FOLLOWERS_COUNT_REGEX));
   followerCount = followerCountMatchList
     ? followerCountMatchList[0]
     : '??? Followers';
@@ -77,7 +76,7 @@ interface APIResponse {
     if (item.title.length > MAX_STR_LENGTH)
       trimTitle = item.title.slice(0, MAX_STR_LENGTH) + '...';
     else trimTitle = item.title;
-    articlesContent.push([trimTitle, '']);
+    articlesContent.push([`👉 ${trimTitle}`, `👏 ${item.claps}`]);
   });
 
   if (slicedData.length === 0) {
@@ -95,11 +94,11 @@ interface APIResponse {
 
   console.log(gistContent);
 
-  // const box = new GistBox({ id: GIST_ID, token: GH_PAT });
+  const box = new GistBox({ id: GIST_ID, token: GH_PAT });
 
-  // try {
-  //   await box.update({ filename: 'medium-stat.md', content: gistContent });
-  // } catch (err) {
-  //   throw new Error('Update gist failed');
-  // }
+  try {
+    await box.update({ filename: 'medium-stat.md', content: gistContent });
+  } catch (err) {
+    throw new Error('Update gist failed');
+  }
 })();
