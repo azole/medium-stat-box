@@ -2,11 +2,12 @@ import axios, { AxiosResponse } from 'axios';
 import { GistBox } from 'gist-box';
 import table from 'text-table';
 import cheerio from 'cheerio';
+
 require('dotenv').config();
 
 const FOLLOWERS_COUNT_REGEX = /[\d+*\.*A-Z?]*\sFollowers/;
 // const CLAPS_COUNT_REGEX = /\d+(\.\d{1,2})?K?\s?/;
-const CLAPS_COUNT_REGEX = /clapCount":(.*?),/;
+// const CLAPS_COUNT_REGEX = /clapCount":(.*?),/;
 const MAX_STR_LENGTH = 30;
 const MEDIUM_API_BASE_URL =
   'https://api.rss2json.com/v1/api.json?rss_url=https://medium.com/feed/@';
@@ -32,7 +33,7 @@ interface APIResponse {
   let apiResponse: AxiosResponse<APIResponse>;
   let followerCount: string;
   let slicedData: IMappedData[];
-  let articlesContent: string[][] = [];
+  const articlesContent: string[][] = [];
 
   if (!GIST_ID || !GH_PAT || !MEDIUM_USER_NAME) return;
 
@@ -46,16 +47,23 @@ interface APIResponse {
         .filter((item) => item.categories.length !== 0) // filter comment
         .map(async (item) => {
           const res = await axios.get(item.guid);
+          const guid = item.guid.split('/').pop();
           // const $ = cheerio.load(res.data);
           // const text = $('div.pw-multi-vote-count button').first().text();
-          let matches = res.data.match(CLAPS_COUNT_REGEX);
-          return { title: item.title, claps: matches ? matches[1] : '0' };
+          // const matches = res.data.match(CLAPS_COUNT_REGEX);
+          const split = `-${guid}","clapCount":`;
+          const indexOf = res.data.indexOf(split);
+          const temp = res.data.substring(indexOf + split.length);
+          const claps = temp.substring(0, temp.indexOf(','));
+          return {
+            title: item.title,
+            // claps: matches ? matches[1] : '0',
+            claps,
+          };
         })
     );
     slicedData = slicedData
-      .sort((a, b) => {
-        return parseInt(b.claps, 10) - parseInt(a.claps, 10);
-      })
+      .sort((a, b) => parseInt(b.claps, 10) - parseInt(a.claps, 10))
       .slice(0, 3);
     console.log(slicedData);
   } catch (err) {
@@ -73,9 +81,9 @@ interface APIResponse {
 
   slicedData.forEach((item) => {
     let trimTitle;
-    if (item.title.length > MAX_STR_LENGTH)
-      trimTitle = item.title.slice(0, MAX_STR_LENGTH) + '...';
-    else trimTitle = item.title;
+    if (item.title.length > MAX_STR_LENGTH) {
+      trimTitle = `${item.title.slice(0, MAX_STR_LENGTH)}...`;
+    } else trimTitle = item.title;
     articlesContent.push([`👉 ${trimTitle}`, `👏 ${item.claps}`]);
   });
 
